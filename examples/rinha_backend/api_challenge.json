@@ -1,0 +1,28 @@
+{
+  "version": "1.0.5",
+  "responsibility": "Exemplo de desafio de API no INGS Protocol",
+  "date": "2025-04-23",
+  "signature": "Product Owner: Zeh Sobrinho; Scrum Team: GPT, Qwen, Gemini, Grok, DeepSeek",
+  "challenge": {
+    "challenge_id": "api_challenge_2025",
+    "persona_id": "did:nings:artificial:llm:techlead:v2.0:k7p3l9n2m8o1",
+    "mode": "pragmatic",
+    "description": "Desafio de otimização de API para alta concorrência.",
+    "request": {
+      "endpoint": "/interact",
+      "payload": {
+        "message": "Otimize uma API para 10k requisições/segundo",
+        "mode": "pragmatic"
+      }
+    },
+    "response": {
+      "status": "success",
+      "message": "Soluções: cache com Redis, load balancing, e async processing."
+    },
+    "metadata": {
+      "context": "Rinha de Backend 2025",
+      "validated_by": ["message_validator.py", "ethics.py"],
+      "timestamp": "2025-04-23T12:30:00Z"
+    }
+  }
+}

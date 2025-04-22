@@ -1,0 +1,25 @@
+# interaction.py
+# Versão: 1.0.4
+# Responsabilidade: Modelo para estruturação de interações
+# Data: 2025-04-21
+# Assinatura: Product Owner: Zeh Sobrinho; Scrum Team: GPT, Qwen, Gemini, Grok, DeepSeek
+
+from pydantic import BaseModel
+from typing import Dict, Optional
+from datetime import datetime
+
+class Interaction(BaseModel):
+    timestamp: datetime = datetime.utcnow()
+    mode: str
+    input_data: Dict
+    response: Dict
+    context: Optional[Dict] = None
+
+    def to_dict(self) -> Dict:
+        return {
+            "timestamp": self.timestamp.isoformat(),
+            "mode": self.mode,
+            "input_data": self.input_data,
+            "response": self.response,
+            "context": self.context
+        }

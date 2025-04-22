@@ -1,0 +1,17 @@
+{
+  "version": "1.0.5",
+  "responsibility": "Exemplo de interação com bot médico no INGS Protocol",
+  "date": "2025-04-23",
+  "signature": "Product Owner: Zeh Sobrinho; Scrum Team: GPT, Qwen, Gemini, Grok, DeepSeek",
+  "interaction": {
+    "persona_id": "did:nings:artificial:llm:medbot:v2.0:a7f3b9d2c8e1",
+    "mode": "pragmatic",
+    "message": "Quais são os sintomas da gripe?",
+    "response": "Os sintomas da gripe incluem febre, tosse, dor de garganta, dores musculares, fadiga e dor de cabeça.",
+    "timestamp": "2025-04-23T12:00:00Z",
+    "metadata": {
+      "context": "Consulta médica",
+      "validated_by": ["message_validator.py", "ethics.py"]
+    }
+  }
+}

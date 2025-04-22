@@ -1,0 +1,56 @@
+# api-spec-yaml.txt
+# Versão: 1.0.5
+# Responsabilidade: Especificação OpenAPI para a API do INGS Protocol
+# Data: 2025-04-23
+# Assinatura: Product Owner: Zeh Sobrinho; Scrum Team: GPT, Qwen, Gemini, Grok, DeepSeek
+
+openapi: 3.0.3
+info:
+  title: INGS Protocol API
+  version: 1.0.5
+servers:
+  - url: http://localhost:8000
+paths:
+  /handshake:
+    post:
+      summary: Cria uma nova persona
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                persona_name: {type: string}
+                model_type: {type: string}
+              required: [persona_name, model_type]
+      responses:
+        '200':
+          description: Persona criada
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  persona_id: {type: string}
+  /interact:
+    post:
+      summary: Processa uma interação
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                persona_id: {type: string}
+                message: {type: string}
+                mode: {type: string}
+              required: [persona_id, message, mode]
+      responses:
+        '200':
+          description: Resposta da interação
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  response: {type: string}

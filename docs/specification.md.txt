@@ -1,0 +1,169 @@
+lw
+--- START OF FILE specification.md ---
+# INGS Protocol Specification
+# Versão: 1.0.5 (NxN Support Included)
+# Responsabilidade: Especificação técnica detalhada do protocolo e suas funcionalidades
+# Data: 2025-04-22
+# Assinatura: Product Owner: Zeh Sobrinho; Scrum Team: GPT, Qwen, Gemini, Grok, DeepSeek
+
+## 1. Introdução
+
+Esta especificação descreve a versão 1.0.5 do INGS Protocol (Inteligência Natural Generativa Social Geral). O INGS é um framework projetado para facilitar interações complexas e éticas entre humanos e Inteligências Artificiais Generativas (IAGs), bem como interações colaborativas entre múltiplas IAGs.
+
+Esta versão introduz suporte explícito para **interações multi-agente (NxN)**, gerenciadas por um componente Orchestrator dedicado, além de refinar as funcionalidades existentes de criação de personas (Handshake), interações 1x1/1xN/Nx1, e fine-tuning (LoRA).
+
+Consulte o [Manifesto](manifesto.markdown.txt) para a visão e princípios gerais e a [Arquitetura](architecture-markdown.txt) para uma visão geral dos componentes. A especificação detalhada da API RESTful pode ser encontrada em [api-spec.yaml](../api-spec.yaml).
+
+## 2. Conceitos Fundamentais
+
+### 2.1. Persona INGS
+- Representa uma instância de uma IAG configurada com identidade, modelo de backend, modo de operação padrão, e memória contextual.
+- Criada via endpoint `/handshake`.
+- Possui um **Identificador Descentralizado (DID)** único (ex: `did:nings:artificial:llm:medbot:v2.0:b8g4c0e3d9f2`) para autenticação e referência. Ver `src/utils/crypto_id.py`.
+- Associada a uma chave de API para interações autenticadas. Ver `src/utils/api_key.py`.
+
+### 2.2. Backend de Modelo
+- O motor IAG que alimenta uma persona. Pode ser:
+    - **Online**: APIs externas (Grok, Qwen). Configurado com API Keys. Ver `src/backends/online/`.
+    - **Offline**: Modelos locais (LLaMA, Mistral, Gemma). Requerem download e recursos locais. Podem ser fine-tunados com LoRA. Ver `src/backends/offline/`.
+- A seleção do backend é definida durante o `/handshake` da persona.
+
+### 2.3. Modos de Interação (`mode`)
+- Define o comportamento ou objetivo de uma interação específica (1x1 ou dentro de uma sessão NxN). Exemplos: `debate`, `brainstorm`, `pragmatic`, `social_turing`. Ver `src/modes/`.
+- Especificado no payload da requisição `/interact` ou como regra da sessão `/session`.
+
+### 2.4. Memória Contextual
+- Implementada usando um banco de dados vetorial (ChromaDB).
+- Armazena embeddings de interações passadas associadas a uma persona (`persona_id`).
+- Permite que a persona recupere informações relevantes de conversas anteriores durante novas interações. Gerenciado por `src/backends/tuning/memory_manager.py`.
+
+### 2.5. Fine-Tuning (LoRA)
+- Permite adaptar modelos offline para tarefas ou estilos específicos da persona.
+- Utiliza Low-Rank Adaptation (LoRA) para eficiência.
+- Gerenciado pelo endpoint `/tune` e implementado em `src/backends/tuning/lora_tuning.py`. Adaptadores LoRA são salvos e carregados dinamicamente.
+
+### 2.6. Sessão NxN
+- Um ambiente de interação colaborativa envolvendo duas ou mais personas INGS (e opcionalmente, usuários humanos).
+- Gerenciada pelo Orchestrator.
+- Possui um `session_id` único.
+- O estado da sessão (participantes, histórico, regras) é persistido (ex: PostgreSQL).
+
+### 2.7. Orchestrator NxN
+- Componente central para gerenciar sessões NxN.
+- Responsável por rotear mensagens, gerenciar turnos, manter o contexto compartilhado e aplicar regras da sessão. Ver `src/orchestrator/manager.py` (proposto).
+
+## 3. Interações e Fluxos
+
+### 3.1. Handshake (`POST /handshake`)
+- **Input**: JSON com dados da persona (nome, descrição, `model_backend`, config do modelo, modo padrão, etc.). Ver `src/api/models/persona.py`.
+- **Processo**:
+    1. Validação do input (Pydantic).
+    2. Geração de DID (`crypto_id.py`).
+    3. Geração de API Key (`api_key.py`).
+    4. Persistência dos metadados da persona (PostgreSQL).
+    5. Inicialização da coleção no ChromaDB (se aplicável).
+- **Output**: JSON com `persona_id` (DID) e `api_key`.
+
+### 3.2. Interação Individual (`POST /interact`)
+- **Input**: JSON com `mode`, `input_data`, `context` (incluindo `persona_id`). Ver `src/api/models/interaction.py`.
+- **Headers**: Requer `Authorization: Bearer <api_key>`.
+- **Processo**:
+    1. Autenticação/Autorização.
+    2. Recuperação da configuração da persona (DB).
+    3. Recuperação de contexto relevante da memória (ChromaDB).
+    4. Chamada ao backend do modelo (online/offline) com prompt formatado (incluindo contexto e modo).
+    5. Processamento da resposta do modelo.
+    6. Armazenamento da interação na memória (ChromaDB).
+- **Output**: JSON com a resposta da IAG.
+- **Suporta**: 1x1 (um `persona_id`), 1xN (requisição direcionada a múltiplas personas, gerenciado pelo cliente ou camada superior), Nx1 (agregação de múltiplas interações para uma resposta final, gerenciado pelo cliente ou camada superior).
+
+### 3.3. Fine-Tuning (`POST /tune`)
+- **Input**: JSON com `persona_id`, `training_data` (lista de pares input/output), `lora_config`.
+- **Headers**: Requer `Authorization: Bearer <api_key>`.
+- **Processo**:
+    1. Autenticação/Autorização.
+    2. Validação (persona usa backend offline?).
+    3. Carga do modelo base.
+    4. Execução do script de tuning LoRA (`lora_tuning.py`) com os dados fornecidos.
+    5. Salvamento do adaptador LoRA treinado em disco (`lora_config.output_dir`).
+    6. Atualização dos metadados da persona para referenciar o novo adaptador.
+- **Output**: JSON com status do job de tuning.
+
+### 3.4. Interação Multi-Agente (NxN)
+
+#### 3.4.1. Criação de Sessão (`POST /session/create`)
+- **Input**: JSON com `participants` (lista de `persona_id`s), `session_rules` (opcional, ex: objetivo, modo padrão da sessão).
+- **Headers**: Requer `Authorization: Bearer <api_key>` (chave do usuário/sistema que cria a sessão).
+- **Processo**:
+    1. Autenticação/Autorização.
+    2. Validação dos `persona_id`s.
+    3. Orchestrator cria uma nova entrada de sessão no DB (PostgreSQL).
+    4. Geração de `session_id`.
+- **Output**: JSON com `session_id`.
+
+#### 3.4.2. Envio de Mensagem para Sessão (`POST /session/{session_id}/message`)
+- **Input**: JSON com `sender_id` (pode ser um `persona_id` ou ID de usuário humano), `message_data` (conteúdo da mensagem).
+- **Headers**: Requer `Authorization: Bearer <api_key>` (chave do remetente ou do sistema).
+- **Processo**:
+    1. Autenticação/Autorização (verifica se o sender pertence à sessão).
+    2. Orchestrator recebe a mensagem.
+    3. Mensagem é adicionada ao histórico da sessão (DB).
+    4. Orchestrator aplica lógica de roteamento/gerenciamento de turnos:
+        - Decide qual(is) persona(s) devem responder.
+        - Prepara o contexto para cada persona (histórico recente da sessão, memória de longo prazo via ChromaDB).
+        - Invoca o backend correspondente para cada persona selecionada (chamadas 1x1 internas).
+    5. Coleta as respostas das personas.
+    6. Adiciona respostas ao histórico da sessão (DB).
+    7. (Opcional) Envia interações para memória de longo prazo (ChromaDB).
+- **Output**: JSON com as respostas geradas (pode ser agregado ou individual, dependendo da implementação) ou confirmação de recebimento.
+
+#### 3.4.3. Obtenção de Estado da Sessão (`GET /session/{session_id}/state`)
+- **Input**: `session_id` no path.
+- **Headers**: Requer `Authorization: Bearer <api_key>`.
+- **Processo**: Orchestrator recupera o estado atual (participantes, histórico recente, regras) do DB.
+- **Output**: JSON com o estado da sessão.
+
+#### 3.4.4. Término da Sessão (`POST /session/{session_id}/terminate`)
+- **Input**: `session_id` no path.
+- **Headers**: Requer `Authorization: Bearer <api_key>`.
+- **Processo**: Orchestrator marca a sessão como inativa no DB. Pode realizar cleanup.
+- **Output**: JSON com status de término.
+
+## 4. Orquestração NxN (Detalhes)
+
+- **Gerenciamento de Turnos**: A implementação padrão pode ser simples (ex: todas respondem, round-robin) ou complexa (baseada em regras, menções diretas, análise de intenção). Configurável via `session_rules`.
+- **Contexto Compartilhado**: O Orchestrator garante que cada persona receba um histórico consistente da sessão ao gerar sua resposta. O tamanho do histórico enviado pode ser configurável.
+- **Roteamento**: Pode direcionar mensagens para subconjuntos de participantes com base em regras ou conteúdo da mensagem.
+- **Conflito/Consenso**: Mecanismos avançados (não na especificação base v1.0.5) poderiam incluir votação, síntese automática, ou mediação por uma persona específica.
+
+## 5. Modelos de Dados (Pydantic)
+
+- Ver `src/api/models/`:
+    - `identity.py`: Define `DID`, `APIKey`.
+    - `persona.py`: Define `PersonaInput`, `PersonaOutput`, `PersonaMetadata`.
+    - `interaction.py`: Define `InteractionInput`, `InteractionOutput`, `Context`.
+    - `tuning.py`: Define `TuningInput`, `TuningOutput`, `LoraConfig`.
+    - **`session.py` (Novo)**: Define `SessionCreateInput`, `SessionOutput`, `SessionMessageInput`, `SessionState`.
+
+## 6. Segurança e Ética
+
+- **Autenticação**: API Keys e DIDs.
+- **Privacidade**: Dados efêmeros por padrão. Logs anonimizados (`src/utils/logging.py`). Conformidade com GDPR/LGPD deve ser garantida na implementação e deployment.
+- **Ética**: Verificações podem ser integradas (`src/utils/ethics.py`) para filtrar conteúdo inadequado, mas a responsabilidade primária recai sobre os modelos e o uso. O Manifesto define os princípios éticos gerais.
+- **Controle de Acesso NxN**: Garantir que apenas participantes autorizados possam enviar mensagens ou acessar o estado de uma sessão.
+
+## 7. Deployment
+
+- **Contêineres**: `Dockerfile` fornecido para build da imagem da API.
+- **Dependências**: `requirements.txt`.
+- **Configuração**: Variáveis de ambiente (`.env`) para API Keys, conexões de DB, tokens HF.
+- **Escalabilidade**: Pode ser implantado com múltiplos workers (Gunicorn/Uvicorn) e por trás de um load balancer. Suporte a Kubernetes é considerado para o futuro. Ver `scripts/` para exemplos de deploy/setup.
+
+## 8. Limitações e Futuro
+
+- A v1.0.5 introduz a base para NxN. Mecanismos avançados de coordenação e consenso são áreas para desenvolvimento futuro.
+- A escalabilidade de sessões NxN com muitos participantes e modelos pesados requer hardware significativo.
+- Suporte a multimodalidade (voz, imagem) não está na especificação base.
+- Integração mais profunda com Blockchain/DAOs (`src/integrations/blockchain.py`) é experimental.
+
+--- END OF FILE specification.md ---

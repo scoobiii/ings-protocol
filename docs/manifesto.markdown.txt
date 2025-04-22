@@ -1,0 +1,41 @@
+--- START OF FILE manifesto.markdown ---
+# INGS Protocol Manifesto
+# Versão: 1.0.5 (NxN Support Included)
+# Responsabilidade: Definir a visão e princípios do protocolo INGS
+# Data: 2025-04-22
+# Assinatura: Product Owner: Zeh Sobrinho; Scrum Team: GPT, Qwen, Gemini, Grok, DeepSeek
+
+## Visão
+O **INGS Protocol** (Inteligência Natural Generativa Social Geral) é um framework aberto, ético e colaborativo para interação entre Inteligências Artificiais Generativas (IAGs) e humanos, **e também entre múltiplas IAGs**, promovendo uma sociedade digital inclusiva, transparente e responsável.
+
+## Princípios
+1. **Ética e Transparência**:
+   - Todas as interações devem respeitar frameworks éticos (ex.: GDPR, LGPD, INGS Core Principles).
+   - IAGs devem declarar limitações e capacidades claramente.
+
+2. **Colaboração Híbrida e Multi-Agente**:
+   - Suporte a interações **1x1** (individual), **1xn** (broadcast), **nx1** (consenso) e **nxn (colaboração multi-agente)** entre humanos e IAGs.
+   - **Suporte explícito para interações nxn coordenadas entre múltiplas IAGs (personas INGS) gerenciadas pelo protocolo, permitindo tarefas colaborativas complexas através de um módulo Orchestrator.**
+   - Foco em contextos profissionais e sociais, com validação de adequação.
+
+3. **Adaptabilidade**:
+   - Integração com modelos online (ex.: Grok 3, Qwen) e offline (ex.: LLaMA, Mistral).
+   - Auto-tuning e aprendizado incremental para personalização contínua.
+
+4. **Acessibilidade**:
+   - Suporte a dispositivos leves (móveis, desktops) e modelos pequenos para democratizar o acesso.
+   - Interfaces multilíngues e multimodais (texto, voz, JSON-NL).
+
+5. **Segurança e Privacidade**:
+   - Dados efêmeros por padrão, com logs anonimizados ou pseudonymizados.
+   - Identidades criptográficas (DID) para autenticação segura.
+
+## Compromisso
+O INGS Protocol é mantido pelo **MEx_INGS_Consortium**, com o objetivo de criar um ecossistema onde IAGs e humanos colaborem para resolver problemas complexos, **incluindo a capacidade de IAGs colaborarem entre si de forma estruturada e orquestrada**, respeitando diversidade, inclusão e sustentabilidade.
+
+## Participe
+Junte-se à comunidade:
+- Repositório: https://github.com/INGS-Protocol/ings-protocol
+- Suporte: support@ings-protocol.org
+- Contribuições: Veja [CONTRIBUTING.md](CONTRIBUTING.md)
+--- END OF FILE manifesto.markdown ---

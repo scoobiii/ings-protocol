@@ -1,0 +1,55 @@
+# Using Online Models with INGS Protocol
+# Versão: 1.0.4
+# Responsabilidade: Guia para integração com modelos online
+# Data: 2025-04-21
+# Assinatura: Product Owner: Zeh Sobrinho; Scrum Team: GPT, Qwen, Gemini, Grok, DeepSeek
+
+## Introdução
+O INGS Protocol suporta modelos online como Grok 3 (xAI) e Qwen (Alibaba) via APIs. Este guia explica como configurar e usar esses modelos.
+
+## Pré-requisitos
+- Python 3.9+
+- Chaves API para xAI (`XAI_API_KEY`) ou Alibaba (`QWAN_API_KEY`).
+- Arquivo `.env` configurado.
+
+## Configuração
+1. **Instale dependências**:
+   ```bash
+   pip install -r requirements.txt
+   ```
+2. **Configure o .env**:
+   ```bash
+   cp .env.example .env
+   ```
+   Edite `.env`:
+   ```
+   XAI_API_KEY=your_xai_api_key
+   QWAN_API_KEY=your_qwen_api_key
+   ```
+
+## Uso
+1. **Inicie a API**:
+   ```bash
+   python -m src.api.main
+   ```
+2. **Crie uma persona**:
+   Use um JSON como `examples/personas/techlead_ings.json`, especificando `model_backend` como `xai_grok` ou `qwen_api`:
+   ```bash
+   curl -X POST http://localhost:8000/handshake -H "Content-Type: application/json" -d @examples/personas/techlead_ings.json
+   ```
+3. **Interaja**:
+   Envie uma interação:
+   ```bash
+   curl -X POST http://localhost:8000/interact -H "Content-Type: application/json" -d '{"mode":"debate","input_data":{"text":"Discuss AI ethics"},"context":{"persona_id":"did:nings:artificial:llm:techlead:v2.0:a7f3b9d2c8e1"}}'
+   ```
+
+## Dicas
+- **Latência**: Modelos online podem ter latência maior devido à rede. Use Redis para cache.
+- **Custos**: Verifique os limites de uso da API (ex.: xAI, Alibaba).
+- **Segurança**: Nunca exponha chaves API em repositórios públicos.
+
+## Solução de Problemas
+- **Erro 401**: Verifique a validade da chave API.
+- **Erro 429**: Limite de taxa excedido. Ajuste a frequência de chamadas.
+
+Veja mais em [api-spec.yaml](../api-spec.yaml).

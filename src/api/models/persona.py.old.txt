@@ -1,0 +1,82 @@
+# persona.py
+# Versão: 1.0.4
+# Responsabilidade: Modelo de persona INGS com suporte a múltiplos backends e auto-tuning
+# Data: 2025-04-21
+# Assinatura: Product Owner: Zeh Sobrinho; Scrum Team: GPT, Qwen, Gemini, Grok, DeepSeek
+
+from pydantic import BaseModel
+from src.utils.crypto_id import generate_crypto_id
+from typing import List, Dict, Optional
+from src.backends.tuning.memory_manager import MemoryManager
+from src.models.identity import Identity
+
+class SystemInstructions(BaseModel):
+    one_to_one: Dict
+    one_to_many: Dict
+    many_to_one: Dict
+    profession_specific: Dict
+    context_validation: Dict
+
+class PersonaINGS(BaseModel):
+    schema_version: str
+    file_metadata: Dict
+    entity_type: str
+    core_parameters: Dict
+    behavioral_parameters: SystemInstructions
+    model_backend: str
+    memory_manager: Optional[MemoryManager] = None
+    interactions: List[Dict] = []
+
+    @classmethod
+    def create(cls, schema_version: str, file_metadata: Dict, entity_type: str, 
+               core_parameters: Dict, behavioral_parameters: Dict, model_backend: str):
+        identity = Identity.create(
+            nome=core_parameters["identity"]["nome"], 
+            type=core_parameters["identity"]["type"]
+        )
+        core_parameters["identity"] = identity.dict()
+        
+        # Inicializar gerenciador de memória
+        memory_manager = MemoryManager(persona_id=identity.id_ings) if entity_type == "INGS_SINTETICA" else None
+        
+        return cls(
+            schema_version=schema_version,
+            file_metadata=file_metadata,
+            entity_type=entity_type,
+            core_parameters=core_parameters,
+            behavioral_parameters=SystemInstructions(**behavioral_parameters),
+            model_backend=model_backend,
+            memory_manager=memory_manager
+        )
+
+    def add_interaction(self, interaction: Dict):
+        self.interactions.append(interaction)
+        if self.memory_manager:
+            self.memory_manager.store_interaction(interaction)
+
+    def update_preferences(self, preferences: Dict):
+        self.core_parameters["communication_preferences"].update(preferences)
+
+    def get_contextual_response(self, input_data: Dict, mode: str) -> Dict:
+        if self.memory_manager:
+            context = self.memory_manager.retrieve_context(input_data)
+            input_data["context"] = context
+        return {
+            "response": f"Processed by {self.model_backend} in {mode} mode",
+            "input_data": input_data
+        }
+
+    @classmethod
+    def get_by_id(cls, persona_id: str) -> 'PersonaINGS':
+        # Simulação: Substituir por consulta ao banco de dados
+        return cls(
+            schema_version="2.0",
+            file_metadata={"version": "1.0.4"},
+            entity_type="INGS_SINTETICA",
+            core_parameters={"identity": {"id_ings": persona_id}},
+            behavioral_parameters=SystemInstructions(
+                one_to_one={}, one_to_many={}, many_to_one={}, 
+                profession_specific={}, context_validation={}
+            ),
+            model_backend="xai_grok"
+        )

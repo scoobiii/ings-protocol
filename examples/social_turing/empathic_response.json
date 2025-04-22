@@ -1,0 +1,17 @@
+{
+  "version": "1.0.5",
+  "responsibility": "Exemplo de resposta empática no modo social Turing no INGS Protocol",
+  "date": "2025-04-23",
+  "signature": "Product Owner: Zeh Sobrinho; Scrum Team: GPT, Qwen, Gemini, Grok, DeepSeek",
+  "interaction": {
+    "persona_id": "did:nings:artificial:llm:edututor:v2.0:d0i6e2g5f1h4",
+    "mode": "social_turing",
+    "message": "Estou me sentindo sobrecarregado com os estudos.",
+    "response": "Entendo como isso pode ser difícil. Vamos organizar um plano de estudos juntos para aliviar o estresse?",
+    "timestamp": "2025-04-23T13:00:00Z",
+    "metadata": {
+      "context": "Apoio educacional",
+      "validated_by": ["message_validator.py", "ethics.py"]
+    }
+  }
+}

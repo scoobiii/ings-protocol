@@ -1,0 +1,105 @@
+# api-spec.yaml
+# Versão: 1.0.4
+# Responsabilidade: Especificação OpenAPI para a API INGS
+# Data: 2025-04-21
+# Assinatura: Product Owner: Zeh Sobrinho; Scrum Team: GPT, Qwen, Gemini, Grok, DeepSeek
+
+openapi: 3.0.3
+info:
+  title: INGS Protocol API
+  version: 1.0.4
+  description: API para gerenciamento de personas INGS, interações e auto-tuning
+servers:
+  - url: http://localhost:8000
+    description: Servidor local
+paths:
+  /handshake:
+    post:
+      summary: Inicia uma nova persona INGS
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/HandshakeRequest'
+      responses:
+        '200':
+          description: Handshake bem-sucedido
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status: { type: string }
+                  api_key: { type: string }
+                  persona_id: { type: string }
+        '500':
+          description: Erro interno
+  /interact:
+    post:
+      summary: Processa uma interação com uma persona INGS
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InteractionRequest'
+      responses:
+        '200':
+          description: Interação bem-sucedida
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status: { type: string }
+                  response: { type: object }
+        '500':
+          description: Erro interno
+  /tune:
+    post:
+      summary: Ajusta um modelo com fine-tuning
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TuningRequest'
+      responses:
+        '200':
+          description: Tuning bem-sucedido
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status: { type: string }
+                  message: { type: string }
+        '500':
+          description: Erro interno
+components:
+  schemas:
+    HandshakeRequest:
+      type: object
+      properties:
+        schema_version: { type: string }
+        file_metadata: { type: object }
+        entity_type: { type: string }
+        core_parameters: { type: object }
+        behavioral_parameters: { type: object }
+        model_backend: { type: string }
+      required: [schema_version, file_metadata, entity_type, core_parameters, behavioral_parameters, model_backend]
+    InteractionRequest:
+      type: object
+      properties:
+        mode: { type: string }
+        input_data: { type: object }
+        context: { type: object }
+      required: [mode, input_data, context]
+    TuningRequest:
+      type: object
+      properties:
+        persona_id: { type: string }
+        training_data: { type: array, items: { type: object } }
+        lora_config: { type: object }
+      required: [persona_id, training_data, lora_config]

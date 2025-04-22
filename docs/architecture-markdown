@@ -1,0 +1,103 @@
+--- START OF FILE architecture.markdown ---
+# INGS Protocol Architecture
+# Versão: 1.0.5 (NxN Support Included)
+# Responsabilidade: Descrever a arquitetura técnica do projeto INGS
+# Data: 2025-04-22
+# Assinatura: Product Owner: Zeh Sobrinho; Scrum Team: GPT, Qwen, Gemini, Grok, DeepSeek
+
+## Visão Geral
+O INGS Protocol é uma API baseada em FastAPI que gerencia personas INGS, interações (incluindo 1x1, 1xN, Nx1 e **NxN multi-agente**), auto-tuning, e suporta múltiplos backends de modelos (online e offline). A arquitetura é modular, escalável e focada em privacidade, ética, adaptabilidade e **colaboração orquestrada entre IAGs**.
+
+## Componentes Principais
+
+### 1. API (src/api/)
+- **Framework**: FastAPI para endpoints RESTful.
+- **Endpoints**:
+  - `/handshake`: Cria/gerencia personas INGS com IDs criptográficos (DID).
+  - `/interact`: Processa interações **1x1, 1xn, nx1**.
+  - `/tune`: Gerencia o fine-tuning de modelos com LoRA.
+  - **(Novo)** `/session`: Gerencia o ciclo de vida de sessões colaborativas **NxN**.
+      - `POST /session/create`: Inicia uma sessão NxN com personas específicas.
+      - `POST /session/{session_id}/message`: Envia uma mensagem para uma sessão NxN (roteada pelo Orchestrator).
+      - `GET /session/{session_id}/state`: Obtém o estado/histórico da sessão.
+      - `POST /session/{session_id}/terminate`: Encerra uma sessão NxN.
+- **Modelos Pydantic**: Validação de dados (`persona.py`, `interaction.py`, `identity.py`, **`session.py` (novo)**).
+
+### 2. Backends (src/backends/)
+- **Online**: `xai_grok.py`, `qwen_api.py` (Interface com APIs externas).
+- **Offline**: `llama_local.py`, `mistral_local.py` (Execução local via Hugging Face).
+- **Tuning**: `lora_tuning.py`, `memory_manager.py` (ChromaDB para memória incremental).
+- *Nota: Chamados individualmente pelo Orchestrator durante sessões NxN.*
+
+### 3. Modos (src/modes/)
+- `debate.py`, `brainstorm.py`, `social_turing.py`, `pragmatic.py`.
+- **(Novo/Estendido)** Modos podem ser aplicados a sessões NxN, definindo o objetivo da colaboração (ex: `collaborative_problem_solving.py`).
+
+### 4. Protocolos (src/protocols/)
+- `json_nl.py`, `lmql.py`, `vector_compression.py`.
+- **(Potencialmente Novo)** `multi_agent_protocol.py`: Define regras de comunicação e sequenciamento para interações NxN (gerenciamento de turnos, etc.), implementado dentro do Orchestrator.
+
+### 5. Utilitários (src/utils/)
+- `logging.py`, `ethics.py`, `api_key.py`, `crypto_id.py`.
+
+### 6. Integrações (src/integrations/)
+- `runtime.py`, `social.py`, `blockchain.py`, `vector_db.py`.
+
+### **7. Orchestrator (Novo Componente - ex: `src/orchestrator/manager.py`)**
+- **Responsabilidade**: Gerenciar o fluxo de comunicação e estado das sessões de interação NxN.
+- **Funcionalidades**:
+    - Gerenciamento de Sessão: Criação, persistência de estado (participantes, histórico, regras), término.
+    - Roteamento de Mensagens: Distribui mensagens de entrada para as IAGs apropriadas na sessão.
+    - Gerenciamento de Turnos: Implementa lógica para determinar a ordem ou concorrência das respostas das IAGs.
+    - Manutenção de Contexto Compartilhado: Fornece histórico relevante a cada IAG.
+    - Coordenação e Consenso (Opcional): Pode incluir mecanismos para síntese ou votação.
+- **Interação**: Chamado pela API (`/session` endpoints), chama os Backends, interage com o Banco de Dados.
+
+### 8. Banco de Dados
+- **PostgreSQL**: Metadados de personas, interações, **estado persistente de sessões NxN**.
+- **Redis**: Cache de respostas, **estado volátil de sessões NxN (opcional)**.
+- **ChromaDB**: Banco vetorial para memória contextual de longo prazo das personas.
+
+## Fluxo de Dados (Incluindo NxN)
+1. **Handshake**: Cliente -> API -> Cria Persona (DB) -> Retorna ID/Key.
+2. **Interação (1x1, 1xN, Nx1)**: Cliente -> API (`/interact`) -> Backend(s) -> Resposta. (Memória via ChromaDB).
+3. **Tuning**: Cliente -> API (`/tune`) -> Backend Tuning -> Atualiza pesos LoRA.
+4. **Interação (NxN)**:
+   - Cliente -> API (`POST /session/create`) -> Orchestrator (Cria Sessão no DB).
+   - Cliente -> API (`POST /session/.../message`) -> Orchestrator.
+   - Orchestrator -> Determina IAGs -> Chama Backends (com contexto da sessão).
+   - Backends -> Respostas das IAGs -> Orchestrator.
+   - Orchestrator -> Atualiza Estado da Sessão (DB) -> Retorna respostas agregadas/formatadas ao Cliente.
+   - Orchestrator -> Envia interações relevantes para ChromaDB (memória das personas).
+
+## Escalabilidade
+- Contêineres (Docker), Orquestração (K8s), Cache (Redis).
+- Sessões NxN ativas podem aumentar a carga nos backends e no Orchestrator.
+
+## Segurança
+- DIDs, API Keys, Dados efêmeros (padrão), Criptografia E2E (opcional).
+- Controle de acesso para participação em sessões NxN.
+
+## Diagrama (Conceitual com Orchestrator)
+```mermaid
+graph LR
+    Cliente --> API[FastAPI Endpoints<br>/handshake, /interact, /tune, /session]
+
+    subgraph INGS Core
+        API --> Orchestrator[NxN Session Orchestrator<br>(src/orchestrator)]
+        API --> Backends[Model Backends<br>(Online/Offline)<br>src/backends]
+        API --> Tuning[LoRA Tuning<br>src/backends/tuning]
+
+        Orchestrator --> Backends
+        Orchestrator <--> DBP[PostgreSQL<br>Session State, Metadados]
+        Orchestrator <--> DBR[Redis<br>Cache, Session State (Volatile)]
+
+        Backends <--> DBV[ChromaDB<br>Vector Memory]
+        Backends <--> DBP
+        Tuning --> Backends -- Updates LoRA Weights --> Filesystem/Model Hub
+
+        API <--> DBP
+        API <--> DBR
+    end
+
+    style Orchestrator fill:#f9d,stroke:#333,stroke-width:2px

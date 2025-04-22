@@ -1,0 +1,21 @@
+# identity.py
+# Versão: 1.0.4
+# Responsabilidade: Modelo para gerenciamento de identidades criptográficas
+# Data: 2025-04-21
+# Assinatura: Product Owner: Zeh Sobrinho; Scrum Team: GPT, Qwen, Gemini, Grok, DeepSeek
+
+from pydantic import BaseModel
+from src.utils.crypto_id import generate_crypto_id
+
+class Identity(BaseModel):
+    nome: str
+    type: str
+    id_ings: str = None
+
+    @classmethod
+    def create(cls, nome: str, type: str):
+        id_ings = generate_crypto_id(nome, type)
+        return cls(nome=nome, type=type, id_ings=id_ings)
+
+    def to_did(self) -> str:
+        return f"did:nings:artificial:llm:{self.type}:v2.0:{self.id_ings}"

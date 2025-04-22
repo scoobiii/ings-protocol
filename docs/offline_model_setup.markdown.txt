@@ -1,0 +1,60 @@
+# Setting Up Offline Models with INGS Protocol
+# Versão: 1.0.4
+# Responsabilidade: Guia para configuração de modelos offline
+# Data: 2025-04-21
+# Assinatura: Product Owner: Zeh Sobrinho; Scrum Team: GPT, Qwen, Gemini, Grok, DeepSeek
+
+## Introdução
+O INGS Protocol suporta modelos offline como LLaMA 3.1 (8B), Mistral 7B e Gemma 2 para execução em desktops ou dispositivos móveis leves. Este guia explica como configurá-los.
+
+## Pré-requisitos
+- Python 3.9+
+- GPU (recomendado, ex.: NVIDIA com CUDA).
+- Hugging Face Transformers e token (`HUGGINGFACE_TOKEN`).
+
+## Configuração
+1. **Instale dependências**:
+   ```bash
+   pip install -r requirements.txt
+   ```
+2. **Configure o .env**:
+   ```bash
+   cp .env.example .env
+   ```
+   Edite `.env`:
+   ```
+   HUGGINGFACE_TOKEN=your_hf_token
+   ```
+3. **Baixe o modelo**:
+   Para LLaMA 3.1 (8B):
+   ```bash
+   huggingface-cli download meta-llama/Llama-3.1-8B
+   ```
+   Ou use `transformers` diretamente no código.
+
+## Uso
+1. **Inicie a API**:
+   ```bash
+   python -m src.api.main
+   ```
+2. **Crie uma persona**:
+   Use um JSON como `examples/personas/medbot_ings.json`, especificando `model_backend` como `llama_local` ou `mistral_local`:
+   ```bash
+   curl -X POST http://localhost:8000/handshake -H "Content-Type: application/json" -d @examples/personas/medbot_ings.json
+   ```
+3. **Interaja**:
+   Envie uma interação:
+   ```bash
+   curl -X POST http://localhost:8000/interact -H "Content-Type: application/json" -d '{"mode":"pragmatic","input_data":{"text":"Explain heart rate"},"context":{"persona_id":"did:nings:artificial:llm:medbot:v2.0:b8g4c0e3d9f2"}}'
+   ```
+
+## Otimização
+- **Quantização**: Use `bitsandbytes` para reduzir uso de memória (ex.: 4-bit).
+- **Dispositivos Leves**: Prefira Gemma 2 (2B) para móveis.
+- **Cache**: Configure Redis para respostas mais rápidas.
+
+## Solução de Problemas
+- **Erro de Memória**: Reduza o tamanho do modelo ou use quantização.
+- **Erro de Token**: Verifique `HUGGINGFACE_TOKEN` no .env.
+
+Veja mais em [api-spec.yaml](../api-spec.yaml).
