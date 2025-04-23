@@ -88,4 +88,10 @@ Contato
 - Assinatura: Product Owner: Zeh Sobrinho; Scrum Team: GPT, Qwen, Gemini, Grok, DeepSeek
 - Repositório: https://github.com/INGS-Protocol/ings-protocol
 
+# Motivação
+- https://www.lex.tec.br/en/voz-da-lex
+- https://github.com/scoobiii/manifestoIAG
+
+
+
 
