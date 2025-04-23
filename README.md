@@ -82,11 +82,10 @@ Creative Commons AI 4.0
 Contato
 
 ### README.md
-### Versão: 1.0.5
-### Responsabilidade: Documentação inicial do INGS Protocol
-### Data: 2025-04-23
-### Assinatura: Product Owner: Zeh Sobrinho; Scrum Team: GPT, Qwen, Gemini, Grok, DeepSeek
-
-Repositório: https://github.com/INGS-Protocol/ings-protocol
+- Versão: 1.0.5
+- Responsabilidade: Documentação inicial do INGS Protocol
+- Data: 2025-04-23
+- Assinatura: Product Owner: Zeh Sobrinho; Scrum Team: GPT, Qwen, Gemini, Grok, DeepSeek
+- Repositório: https://github.com/INGS-Protocol/ings-protocol
 
 
