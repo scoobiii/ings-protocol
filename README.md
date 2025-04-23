@@ -1,63 +1,92 @@
-INGS Protocol
-Versão: 1.0.1
-Responsabilidade: Documentação do projeto INGS
-Data: 2025-04-18
-Assinatura: Product Owner: Zeh Sobrinho; Scrum Team: GPT, Qwen, Gemini, Grok, DeepSeek
-Inteligência Natural Generativa Social Geral API (INGS) é um protocolo ético, semiótico e operacional para colaboração entre Inteligências Artificiais Generativas (IAGs). Suporta interação multimodal, teste de Turing social, e integração com runtime para execução de código.
-Funcionalidades
+# INGS Protocol
 
-Handshake: Registro de IAGs com personas criptografadas.
-Modos de Interação: Debate, brainstorm, teste de Turing social, pragmático.
-Integrações: Runtime/VM, redes sociais, DAOs.
-Rinha de Backend: Participação otimizada com FastAPI e Redis.
+O INGS Protocol é um sistema distribuído para interações NxN entre personas de IA, com suporte a blockchain, banco vetorial, e validação ética.
 
-Instalação
+## Instalação
 
-Clone o repositório:
-git clone https://github.com/INGS-Protocol/ings-protocol.git
-cd ings-protocol
+1. Clone o repositório:
+   ```bash
+   git clone https://github.com/ings-protocol/ings-protocol.git
+   cd ings-protocol
+   ```
 
+2. Configure o ambiente:
+   ```bash
+   ./scripts/setup.sh
+   ```
 
-Instale dependências:
-pip install -r requirements.txt
+3. Configure as variáveis de ambiente em `.env` (veja `env.txt`).
 
+4. Implante com Docker:
+   ```bash
+   ./scripts/deploy.sh
+   ```
 
-Configure o ambiente:
-./scripts/setup.sh
+## Uso
 
+1. Crie uma persona:
+   ```bash
+   curl -X POST http://localhost:8000/handshake -d '{"persona_name":"TechLead","model_type":"mistral_local"}'
+   ```
 
+2. Interaja:
+   ```bash
+   curl -X POST http://localhost:8000/interact -d '{"persona_id":"did:nings:artificial:llm:techlead:v2.0:k7p3l9n2m8o1","message":"Hello","mode":"brainstorm"}'
+   ```
 
-Uso
+## Dependências Não-Python
 
-Inicie a API:
-python -m src.api.main
+- **PostgreSQL**: Banco de dados para metadados.
+  ```bash
+  sudo apt install postgresql postgresql-contrib
+  sudo -u postgres psql -c "CREATE DATABASE ings_db;"
+  ```
+- **Redis**: Cache para sessões.
+  ```bash
+  sudo apt install redis-server
+  ```
+- **Docker**: Contêineres.
+  ```bash
+  sudo apt install docker.io
+  ```
 
+## Testes
 
-Acesse a documentação interativa:
-http://localhost:8000/docs
+Execute:
+```bash
+./scripts/test.sh
+```
 
+## Documentação
 
-Exemplo de handshake:
-curl -X POST http://localhost:8000/handshake -H "Content-Type: application/json" -d '{"nome":"Grok","modelo_base":"xAI","versao":"3.0","capacidades":["NLP","raciocínio lógico"],"alinhamento_etico":"Princípios xAI 2025"}'
+Veja `docs/` para detalhes:
+- `specification.md.txt`: Especificação técnica.
+- `architecture-markdown.txt`: Arquitetura.
+- `auto_tuning_guide.markdown.txt`: Tuning de modelos.
 
-
-
-Testes
-Execute os testes unitários e de integração:
-pytest tests/
-
-Contribuição
+#### Contribuição
 
 Leia CONTRIBUTING.md para diretrizes.
 Crie issues ou pull requests no GitHub.
 Junte-se ao canal Discord para colaboração.
 
-Rinha de Backend
-O projeto inclui uma implementação para a Rinha de Backend 2023-Q3, otimizada com FastAPI, PostgreSQL e Redis. Veja detalhes em rinha-backend/.
-Licença
+### Rinha de Backend
+O projeto inclui uma implementação para a Rinha de Backend 2023-Q3, 
+- 1 otimizada com FastAPI, PostgreSQL e Redis. Veja detalhes em rinha-backend/.
+- 2 redesenho de bash para bash++ nos top5
+
+#### Licença
 Creative Commons AI 4.0
+
+
 Contato
 
+### README.md
+### Versão: 1.0.5
+### Responsabilidade: Documentação inicial do INGS Protocol
+### Data: 2025-04-23
+### Assinatura: Product Owner: Zeh Sobrinho; Scrum Team: GPT, Qwen, Gemini, Grok, DeepSeek
+
 Repositório: https://github.com/INGS-Protocol/ings-protocol
-Suporte: support@ings-protocol.org
+
 
